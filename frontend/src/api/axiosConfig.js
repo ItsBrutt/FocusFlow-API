@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Crear una instancia de Axios centralizada
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    baseURL: import.meta.env.VITE_API_URL || '', // En producción (mismo dominio), usamos rutas relativas
     headers: {
         'Content-Type': 'application/json'
     }
