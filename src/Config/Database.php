@@ -41,7 +41,13 @@ class Database {
             echo json_encode([
                 "success" => false, 
                 "message" => "Error de conexion a la base de datos", 
-                "tried_user" => $this->username, // Esto nos dirá qué está leyendo realmente
+                "env_check" => [
+                    "host" => !empty($this->host),
+                    "db" => !empty($this->db_name),
+                    "user" => !empty($this->username),
+                    "pass" => !empty($this->password)
+                ],
+                "tried_user" => $this->username,
                 "details" => $e->getMessage()
             ]);
             exit;
