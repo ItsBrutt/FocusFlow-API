@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await api.post('/login', { email, password });
+            const response = await api.post('/api/login', { email, password });
             if (response.data.success) {
                 const { token, user: userData } = response.data.data;
                 // Guardamos en el navegador

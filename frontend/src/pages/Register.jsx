@@ -21,7 +21,7 @@ const Register = () => {
         setGeneralError(null);
 
         try {
-            const response = await api.post('/register', formData);
+            const response = await api.post('/api/register', formData);
             if (response.data.success) {
                 // Redirigir al login si se crea la cuenta con éxito
                 navigate('/login');

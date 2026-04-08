@@ -15,8 +15,8 @@ $router = new Router();
 $router->get('/', function() {
     Response::json(200, "FocusFlow API - Escuchando Rutas");
 });
-$router->post('/register', [AuthController::class, 'register']);
-$router->post('/login', [AuthController::class, 'login']);
+$router->post('/api/register', [AuthController::class, 'register']);
+$router->post('/api/login', [AuthController::class, 'login']);
 
 // Rutas Privadas Protegidas por Middleware
 $router->get('/api/dashboard', [DashboardController::class, 'getTree'])->middleware('auth');
