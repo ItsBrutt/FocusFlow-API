@@ -1,0 +1,19 @@
+# d:\programacion\FocusFlow-API\.gitignore
+
+# Security (Important!)
+.env
+
+# PHP
+vendor/
+composer.lock
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# Windows
+Thumbs.db
+
+# Logs
+logs/
