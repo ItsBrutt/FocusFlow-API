@@ -12,6 +12,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Cargar variables de entorno solo si no están definidas en el servidor
+$env_file = __DIR__ . '/../.env';
+if (file_exists($env_file)) {
+    $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        list($name, $value) = explode('=', $line, 2);
+        $name = trim($name);
+        if (getenv($name) === false) {
+            putenv($name . '=' . trim($value));
+        }
+    }
+}
+
 // Autoload manual para evitar fallos de rutas en ambiente serverless
 spl_autoload_register(function ($class_name) {
     if (strpos($class_name, 'App\\') === 0) {
