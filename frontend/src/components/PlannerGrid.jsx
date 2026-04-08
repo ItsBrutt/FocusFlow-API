@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../api/axiosConfig';
 
 const HORAS_POR_BLOQUE = {
@@ -8,7 +8,12 @@ const HORAS_POR_BLOQUE = {
     'Noche':     ['18:00','19:00','20:00','21:00','22:00','23:00']
 };
 
-// ─── Subcomponente: Añadir Tarea Colapsable ────────────────────────────────────
+// ── Feedback háptico suave (si el dispositivo lo soporta) ──────────────────────
+const vibrate = (pattern = 50) => {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+};
+
+// ─── Subcomponente: Añadir Tarea (Mobile-first) ────────────────────────────────
 const AddTaskInline = ({ diaId, onTareaAgregada }) => {
     const [expanded, setExpanded] = useState(false);
     const [text, setText] = useState('');
@@ -26,105 +31,144 @@ const AddTaskInline = ({ diaId, onTareaAgregada }) => {
 
     useEffect(() => {
         if (expanded && inputRef.current) {
-            // pequeño delay para que la animación CSS termine primero
-            setTimeout(() => inputRef.current?.focus(), 50);
+            setTimeout(() => inputRef.current?.focus(), 80);
         }
     }, [expanded]);
 
-    const handleKeyDown = async (e) => {
-        if (e.key === 'Enter' && text.trim() !== '') {
-            e.preventDefault();
-            setLoading(true);
-            try {
-                const tag = categoria.trim() === '' ? 'General' : categoria;
-                const response = await api.post('/api/tareas', {
-                    dia_id: diaId,
-                    descripcion: text,
-                    categoria: tag,
-                    bloque_horario: bloque,
-                    hora_inicio: hora
-                });
-                if (response.data.success) {
-                    onTareaAgregada(diaId, response.data.data);
-                    setText('');
-                    setCategoria('');
-                    setExpanded(false);
-                }
-            } catch (err) {
-                alert(err.response?.data?.message || "Error al crear la tarea");
-            } finally {
-                setLoading(false);
+    const handleSave = useCallback(async () => {
+        if (!text.trim()) return;
+        setLoading(true);
+        vibrate(30);
+        try {
+            const tag = categoria.trim() || 'General';
+            const response = await api.post('/api/tareas', {
+                dia_id: diaId,
+                descripcion: text.trim(),
+                categoria: tag,
+                bloque_horario: bloque,
+                hora_inicio: hora
+            });
+            if (response.data.success) {
+                onTareaAgregada(diaId, response.data.data);
+                setText('');
+                setCategoria('');
+                setExpanded(false);
+                vibrate([30, 30, 60]); // confirmación
             }
+        } catch (err) {
+            alert(err.response?.data?.message || "Error al crear la tarea");
+        } finally {
+            setLoading(false);
         }
-        if (e.key === 'Escape') {
-            setExpanded(false);
-            setText('');
-        }
+    }, [text, categoria, bloque, hora, diaId, onTareaAgregada]);
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); handleSave(); }
+        if (e.key === 'Escape') { setExpanded(false); setText(''); }
     };
+
+    const handleCancel = () => { setExpanded(false); setText(''); setCategoria(''); };
 
     return (
         <div style={{ marginTop: 'auto', paddingTop: '8px' }}>
-            {/* Estilos de animación */}
             <style>{`
                 .add-task-form {
                     overflow: hidden;
                     max-height: 0;
                     opacity: 0;
-                    transition: max-height 0.28s ease, opacity 0.2s ease;
+                    transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease;
                 }
-                .add-task-form.open {
-                    max-height: 200px;
-                    opacity: 1;
-                }
+                .add-task-form.open { max-height: 240px; opacity: 1; }
                 .add-btn-ghost {
                     width: 100%;
                     border: 1.5px dashed #cbd5e1;
                     background: transparent;
-                    border-radius: 8px;
+                    border-radius: 10px;
+                    /* Altura mínima de 44px para targets táctiles (Apple HIG) */
+                    min-height: 44px;
                     padding: 6px 10px;
-                    font-size: 0.78rem;
+                    font-size: 0.82rem;
                     color: #94a3b8;
                     cursor: pointer;
                     text-align: center;
                     transition: border-color 0.2s, color 0.2s, background 0.2s;
                     font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    -webkit-tap-highlight-color: transparent;
+                    touch-action: manipulation;
                 }
-                .add-btn-ghost:hover {
+                .add-btn-ghost:active {
+                    background: #eff6ff;
                     border-color: #2563eb;
                     color: #2563eb;
-                    background: #eff6ff;
+                    transform: scale(0.97);
                 }
+                .add-btn-ghost.cancel-btn {
+                    border-color: #fca5a5;
+                    color: #ef4444;
+                }
+                .add-btn-ghost.cancel-btn:active {
+                    background: #fef2f2;
+                }
+                .save-btn-mobile {
+                    width: 100%;
+                    min-height: 42px;
+                    border-radius: 10px;
+                    border: none;
+                    background: #2563eb;
+                    color: #fff;
+                    font-size: 0.88rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: background 0.15s, transform 0.1s;
+                    -webkit-tap-highlight-color: transparent;
+                    touch-action: manipulation;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                }
+                .save-btn-mobile:active { background: #1d4ed8; transform: scale(0.97); }
+                .save-btn-mobile:disabled { background: #93c5fd; }
             `}</style>
 
             {/* Formulario expandible */}
             <div className={`add-task-form ${expanded ? 'open' : ''}`}>
-                <div style={{ paddingBottom: '6px', display: 'flex', flexDirection: 'column', gap: '5px', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
-                    <div style={{ display: 'flex', gap: '5px' }}>
-                        <input
-                            type="text"
-                            list="categorias-list"
-                            className="form-control form-control-sm"
-                            style={{ fontSize: '0.76rem', color: '#0d6efd', flex: '1' }}
-                            placeholder="Categoría"
-                            value={categoria}
-                            onChange={e => setCategoria(e.target.value)}
-                            disabled={loading}
-                        />
+                <div style={{
+                    paddingBottom: '8px', display: 'flex', flexDirection: 'column', gap: '6px',
+                    borderTop: '1px solid #f1f5f9', paddingTop: '10px'
+                }}>
+                    {/* Fila: Categoría */}
+                    <input
+                        type="text"
+                        list="categorias-list"
+                        className="form-control"
+                        style={{ fontSize: '0.82rem', color: '#0d6efd', minHeight: '40px' }}
+                        placeholder="Categoría (ej: Entrenamiento)"
+                        value={categoria}
+                        onChange={e => setCategoria(e.target.value)}
+                        disabled={loading}
+                    />
+                    {/* Fila: Bloque + Hora */}
+                    <div style={{ display: 'flex', gap: '6px' }}>
                         <select
-                            className="form-select form-select-sm"
-                            style={{ fontSize: '0.72rem', color: '#7c3aed', maxWidth: '85px' }}
+                            className="form-select"
+                            style={{ fontSize: '0.78rem', color: '#7c3aed', minHeight: '40px', flex: 1 }}
                             value={bloque}
                             onChange={e => setBloque(e.target.value)}
                             disabled={loading}
                         >
-                            <option value="Madrugada">🌙 Madr</option>
-                            <option value="Mañana">☀️ Mañ</option>
+                            <option value="Madrugada">🌙 Madrugada</option>
+                            <option value="Mañana">☀️ Mañana</option>
                             <option value="Tarde">🌤️ Tarde</option>
                             <option value="Noche">🌆 Noche</option>
                         </select>
                         <select
-                            className="form-select form-select-sm"
-                            style={{ fontSize: '0.72rem', color: '#0f172a', maxWidth: '72px' }}
+                            className="form-select"
+                            style={{ fontSize: '0.78rem', color: '#0f172a', minHeight: '40px', maxWidth: '90px' }}
                             value={hora}
                             onChange={e => setHora(e.target.value)}
                             disabled={loading}
@@ -134,19 +178,29 @@ const AddTaskInline = ({ diaId, onTareaAgregada }) => {
                             ))}
                         </select>
                     </div>
+                    {/* Descripción */}
                     <input
                         ref={inputRef}
                         type="text"
-                        className="form-control form-control-sm"
-                        placeholder={loading ? 'Guardando...' : 'Define la acción → Enter para guardar'}
+                        className="form-control"
+                        placeholder={loading ? 'Guardando…' : 'Describe la acción concreta'}
                         value={text}
                         onChange={e => setText(e.target.value)}
                         onKeyDown={handleKeyDown}
                         disabled={loading}
-                        style={{ fontSize: '0.85rem', color: '#212529' }}
+                        style={{ fontSize: '0.9rem', color: '#212529', minHeight: '42px' }}
                     />
+                    {/* Botón guardar VISIBLE (mobile-friendly) */}
+                    <button className="save-btn-mobile" onClick={handleSave} disabled={loading || !text.trim()}>
+                        {loading ? (
+                            <><span className="spinner-border spinner-border-sm" /> Guardando…</>
+                        ) : (
+                            <>✓ Guardar tarea</>
+                        )}
+                    </button>
                 </div>
             </div>
+
             <datalist id="categorias-list">
                 <option value="Backend" />
                 <option value="React" />
@@ -156,107 +210,301 @@ const AddTaskInline = ({ diaId, onTareaAgregada }) => {
                 <option value="Inglés" />
             </datalist>
 
-            {/* Botón fantasma o cancelar */}
             {expanded ? (
-                <button className="add-btn-ghost" onClick={() => { setExpanded(false); setText(''); }} style={{ borderColor: '#fca5a5', color: '#ef4444' }}>
+                <button className="add-btn-ghost cancel-btn" onClick={handleCancel}>
                     ✕ Cancelar
                 </button>
             ) : (
-                <button className="add-btn-ghost" onClick={() => setExpanded(true)}>
-                    + Añadir nueva acción
+                <button className="add-btn-ghost" onClick={() => { setExpanded(true); vibrate(20); }}>
+                    <span style={{ fontSize: '1rem' }}>+</span>
+                    Añadir nueva acción
                 </button>
             )}
         </div>
     );
 };
 
-// ─── Subcomponente: Tarjeta de Tarea ──────────────────────────────────────────
+// ─── Subcomponente: Tarjeta de Tarea con gestos táctiles ──────────────────────
 const TareaCard = ({ tarea, diaId, executionLocked, inThePast, onComplete, onDelete, onEdit, isUpdating }) => {
     const [editMode, setEditMode] = useState(false);
     const [editText, setEditText] = useState(tarea.descripcion);
     const [deleting, setDeleting] = useState(false);
+    const [swipeX, setSwipeX] = useState(0);       // Desplazamiento de swipe
+    const [swipeActive, setSwipeActive] = useState(false);
+    const [longPressActive, setLongPressActive] = useState(false);
 
+    const touchStartX = useRef(null);
+    const touchStartY = useRef(null);
+    const longPressTimer = useRef(null);
+    const cardRef = useRef(null);
+
+    const SWIPE_THRESHOLD = 72; // px para revelar el botón de borrar
     const isDone = tarea.estado === 'Finalizado';
     const missedTask = inThePast && !isDone;
+    const canInteract = !isDone && !inThePast;
 
+    // ── Long press para editar ───────────────────────────────────────────────
+    const handleTouchStart = (e) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+        setSwipeActive(false);
+
+        if (canInteract && !editMode) {
+            longPressTimer.current = setTimeout(() => {
+                vibrate([30, 20, 60]);
+                setLongPressActive(true);
+                setEditMode(true);
+                setEditText(tarea.descripcion);
+            }, 600);
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        const dx = e.touches[0].clientX - touchStartX.current;
+        const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+
+        // Si hay movimiento vertical significativo, no es swipe horizontal
+        if (dy > 10) {
+            clearTimeout(longPressTimer.current);
+            return;
+        }
+
+        clearTimeout(longPressTimer.current);
+
+        // Swipe izquierda para borrar (solo si no está en edición y puede interactuar)
+        if (canInteract && !editMode && dx < -8) {
+            setSwipeActive(true);
+            const bounded = Math.max(-SWIPE_THRESHOLD - 10, Math.min(0, dx));
+            setSwipeX(bounded);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        clearTimeout(longPressTimer.current);
+        setLongPressActive(false);
+
+        if (swipeActive) {
+            if (swipeX <= -(SWIPE_THRESHOLD * 0.75)) {
+                // Swipe suficiente → mantener abierto mostrando botón de borrar
+                setSwipeX(-SWIPE_THRESHOLD);
+            } else {
+                // Swipe insuficiente → revertir
+                setSwipeX(0);
+                setSwipeActive(false);
+            }
+        }
+    };
+
+    const resetSwipe = () => { setSwipeX(0); setSwipeActive(false); };
+
+    // ── Guardar edición ───────────────────────────────────────────────────────
     const handleSaveEdit = async () => {
         if (editText.trim() === tarea.descripcion) { setEditMode(false); return; }
+        vibrate(30);
         try {
             await api.patch(`/api/tareas/${tarea.id}`, { descripcion: editText.trim() });
             onEdit(diaId, tarea.id, editText.trim());
         } catch { /* silencioso */ }
         setEditMode(false);
+        setLongPressActive(false);
     };
 
+    // ── Borrar ────────────────────────────────────────────────────────────────
     const handleDelete = async () => {
-        if (!window.confirm('¿Eliminar esta tarea?')) return;
+        if (!window.confirm('¿Eliminar esta tarea?')) { resetSwipe(); return; }
+        vibrate([40, 30, 80]);
         setDeleting(true);
         try {
             await api.delete(`/api/tareas/${tarea.id}`);
             onDelete(diaId, tarea.id);
-        } catch { setDeleting(false); }
+        } catch { setDeleting(false); resetSwipe(); }
     };
 
-    const cardBg    = isDone ? '#f0fdf4' : missedTask ? '#fff7ed' : '#fff';
-    const cardBorder= isDone ? '#86efac' : missedTask ? '#fcd34d' : '#e2e8f0';
+    const cardBg     = isDone ? '#f0fdf4' : missedTask ? '#fff7ed' : '#fff';
+    const cardBorder = isDone ? '#86efac' : missedTask ? '#fcd34d' : '#e2e8f0';
+    const accentColor = isDone ? '#22c55e' : missedTask ? '#f59e0b' : '#2563eb';
 
     return (
-        <div style={{
-            padding: '8px 10px', borderRadius: '8px',
-            border: `1px solid ${cardBorder}`,
-            borderLeft: `3px solid ${isDone ? '#22c55e' : missedTask ? '#f59e0b' : '#2563eb'}`,
-            background: cardBg,
-            fontSize: '0.88rem', transition: 'all 0.2s',
-            opacity: isUpdating ? 0.6 : 1,
-        }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px', marginBottom: '3px' }}>
-                <span style={{
-                    padding: '1px 7px', borderRadius: '20px',
-                    fontSize: '0.68rem', fontWeight: '700',
-                    background: isDone ? '#dcfce7' : '#dbeafe',
-                    color: isDone ? '#15803d' : '#1d4ed8',
-                }}>
-                    {tarea.categoria}
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                    {isUpdating && <span className="spinner-border spinner-border-sm text-primary" style={{ width: '12px', height: '12px' }} />}
-                    {isDone && <span style={{ fontSize: '0.8rem' }}>✅</span>}
-                    {missedTask && <span style={{ fontSize: '0.8rem' }}>⚠️</span>}
-                    {!isDone && !inThePast && (
-                        <>
-                            <button className="btn btn-link btn-sm p-0 text-muted" style={{ fontSize: '0.65rem', lineHeight: 1 }} onClick={() => setEditMode(true)} title="Editar">✏️</button>
-                            <button className="btn btn-link btn-sm p-0 text-danger" style={{ fontSize: '0.65rem', lineHeight: 1 }} onClick={handleDelete} disabled={deleting} title="Eliminar">{deleting ? '…' : '🗑️'}</button>
-                        </>
-                    )}
-                </div>
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '10px' }}>
+
+            {/* Fondo rojo de swipe-to-delete */}
+            <div style={{
+                position: 'absolute', right: 0, top: 0, bottom: 0,
+                width: SWIPE_THRESHOLD + 'px',
+                background: '#ef4444',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: '10px',
+                opacity: Math.min(1, Math.abs(swipeX) / SWIPE_THRESHOLD),
+            }}>
+                <span style={{ color: '#fff', fontSize: '1.2rem' }}>🗑️</span>
             </div>
 
-            {editMode ? (
-                <input
-                    autoFocus type="text"
-                    className="form-control form-control-sm mt-1"
-                    style={{ fontSize: '0.83rem', color: '#212529', background: '#fff' }}
-                    value={editText}
-                    onChange={e => setEditText(e.target.value)}
-                    onBlur={handleSaveEdit}
-                    onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditMode(false); }}
-                />
-            ) : (
-                <div
-                    className={isDone ? 'text-decoration-line-through' : ''}
-                    style={{
-                        fontSize: '0.82rem', color: isDone ? '#6b7280' : missedTask ? '#92400e' : '#1e293b',
-                        lineHeight: 1.35,
-                        cursor: (!inThePast && !executionLocked) || isDone ? 'pointer' : 'default'
-                    }}
-                    onClick={() => {
-                        if ((!inThePast && !executionLocked && !isUpdating) || (isDone && !isUpdating)) {
-                            onComplete(tarea);
-                        }
-                    }}
-                >
-                    <span style={{ fontSize: '0.68rem', color: '#9ca3af', marginRight: '4px' }}>[{tarea.hora_inicio?.slice(0, 5)}]</span>
-                    {tarea.descripcion}
+            {/* Tarjeta principal (se desliza) */}
+            <div
+                ref={cardRef}
+                style={{
+                    padding: '10px 12px', borderRadius: '10px',
+                    border: `1px solid ${cardBorder}`,
+                    borderLeft: `3px solid ${accentColor}`,
+                    background: cardBg,
+                    fontSize: '0.88rem',
+                    transition: swipeActive ? 'none' : 'transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s',
+                    transform: `translateX(${swipeX}px)`,
+                    opacity: isUpdating ? 0.6 : 1,
+                    cursor: canInteract ? 'pointer' : 'default',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    touchAction: 'pan-y', // dejar scroll vertical libre
+                    position: 'relative',
+                    zIndex: 1,
+                    // Pulso visual de long press
+                    boxShadow: longPressActive ? `0 0 0 3px ${accentColor}44` : 'none',
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onClick={resetSwipe} // tap simple cancela el swipe si estaba abierto
+            >
+                {/* Fila superior: badge + acciones desktop */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                    <span style={{
+                        padding: '2px 8px', borderRadius: '20px',
+                        fontSize: '0.68rem', fontWeight: '700',
+                        background: isDone ? '#dcfce7' : '#dbeafe',
+                        color: isDone ? '#15803d' : '#1d4ed8',
+                    }}>
+                        {tarea.categoria}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        {isUpdating && <span className="spinner-border spinner-border-sm text-primary" style={{ width: '13px', height: '13px' }} />}
+                        {isDone && <span>✅</span>}
+                        {missedTask && <span>⚠️</span>}
+                        {/* Desktop: botones de editar/borrar */}
+                        {canInteract && !editMode && (
+                            <div className="d-none d-md-flex" style={{ gap: '4px' }}>
+                                <button
+                                    className="btn btn-link btn-sm p-0 text-muted"
+                                    style={{ fontSize: '0.7rem', minWidth: '28px', minHeight: '28px' }}
+                                    onClick={(e) => { e.stopPropagation(); setEditMode(true); setEditText(tarea.descripcion); }}
+                                    title="Editar"
+                                >✏️</button>
+                                <button
+                                    className="btn btn-link btn-sm p-0 text-danger"
+                                    style={{ fontSize: '0.7rem', minWidth: '28px', minHeight: '28px' }}
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+                                    disabled={deleting}
+                                    title="Eliminar"
+                                >{deleting ? '…' : '🗑️'}</button>
+                            </div>
+                        )}
+                        {/* Mobile: hint de long press */}
+                        {canInteract && !editMode && (
+                            <span className="d-md-none" style={{ fontSize: '0.6rem', color: '#cbd5e1', fontStyle: 'italic' }}>
+                                ✎
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Cuerpo: edición o texto */}
+                {editMode ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
+                        <input
+                            autoFocus
+                            type="text"
+                            className="form-control"
+                            style={{ fontSize: '0.88rem', color: '#212529', background: '#fff', minHeight: '40px' }}
+                            value={editText}
+                            onChange={e => setEditText(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditMode(false); }}
+                        />
+                        {/* Botones de confirmación visibles en mobile */}
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                                style={{
+                                    flex: 1, minHeight: '40px', borderRadius: '8px', border: 'none',
+                                    background: '#22c55e', color: '#fff', fontWeight: '700', fontSize: '0.85rem',
+                                    cursor: 'pointer', touchAction: 'manipulation',
+                                    WebkitTapHighlightColor: 'transparent',
+                                }}
+                                onClick={handleSaveEdit}
+                            >
+                                ✓ Guardar
+                            </button>
+                            <button
+                                style={{
+                                    flex: 1, minHeight: '40px', borderRadius: '8px',
+                                    border: '1px solid #e2e8f0', background: '#f8fafc',
+                                    color: '#64748b', fontWeight: '600', fontSize: '0.85rem',
+                                    cursor: 'pointer', touchAction: 'manipulation',
+                                    WebkitTapHighlightColor: 'transparent',
+                                }}
+                                onClick={() => setEditMode(false)}
+                            >
+                                ✕ Cancelar
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div
+                        className={isDone ? 'text-decoration-line-through' : ''}
+                        style={{
+                            fontSize: '0.84rem',
+                            color: isDone ? '#6b7280' : missedTask ? '#92400e' : '#1e293b',
+                            lineHeight: 1.4,
+                            // Área de toque amplia
+                            paddingTop: '2px', paddingBottom: '2px',
+                        }}
+                        onClick={(e) => {
+                            if (swipeX !== 0) { resetSwipe(); return; }
+                            if ((!inThePast && !executionLocked && !isUpdating) || (isDone && !isUpdating)) {
+                                vibrate(isDone ? [20, 10] : 30);
+                                onComplete(tarea);
+                            }
+                        }}
+                    >
+                        <span style={{ fontSize: '0.67rem', color: '#9ca3af', marginRight: '4px' }}>
+                            [{tarea.hora_inicio?.slice(0, 5)}]
+                        </span>
+                        {tarea.descripcion}
+                    </div>
+                )}
+
+                {/* Hint mobile: instrucción de gestos */}
+                {canInteract && !editMode && swipeX === 0 && (
+                    <div className="d-md-none" style={{
+                        marginTop: '4px',
+                        fontSize: '0.6rem',
+                        color: '#e2e8f0',
+                        textAlign: 'right',
+                        fontStyle: 'italic',
+                    }}>
+                        mantén para editar · desliza para borrar
+                    </div>
+                )}
+            </div>
+
+            {/* Botón de borrar revelado por swipe (tap para confirmar) */}
+            {swipeX <= -SWIPE_THRESHOLD * 0.75 && (
+                <div style={{
+                    position: 'absolute', right: 0, top: 0, bottom: 0,
+                    width: SWIPE_THRESHOLD + 'px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 2,
+                }}>
+                    <button
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        style={{
+                            background: 'transparent', border: 'none',
+                            width: '100%', height: '100%',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '1.4rem',
+                            touchAction: 'manipulation',
+                        }}
+                    >
+                        {deleting ? '…' : '🗑️'}
+                    </button>
                 </div>
             )}
         </div>
@@ -315,8 +563,7 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
     const calcularExecLock = (dias, diaActualIdx) => {
         for (let i = 0; i < diaActualIdx; i++) {
             const prevDia = dias[i];
-            const hayPendientes = prevDia.tareas?.some(t => t.estado !== 'Finalizado');
-            if (hayPendientes) return true;
+            if (prevDia.tareas?.some(t => t.estado !== 'Finalizado')) return true;
         }
         return false;
     };
@@ -328,7 +575,11 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
                 const diaSemana = new Date().getDay();
                 if (diaSemana === 0 || diaSemana === 6) {
                     return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '10px', marginBottom: '12px' }}>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            padding: '10px 14px', background: '#f0fdf4',
+                            border: '1px solid #86efac', borderRadius: '10px', marginBottom: '12px'
+                        }}>
                             <span style={{ fontSize: '1.2rem' }}>📅</span>
                             <div style={{ fontSize: '0.82rem', color: '#14532d' }}>
                                 <strong>¡Es fin de semana!</strong> El momento ideal para planificar tus batallas de la próxima semana.
@@ -347,68 +598,49 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
                 }
                 .planner-row-container::-webkit-scrollbar { height: 5px; }
                 .planner-row-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-                .day-column { scroll-snap-align: center; min-width: 265px !important; margin: 0 4px; }
+                .day-column { scroll-snap-align: center; min-width: 280px !important; margin: 0 4px; }
                 @media (min-width: 900px) {
                     .planner-row-container { scroll-snap-type: none; overflow-x: visible; }
                     .day-column { min-width: 180px !important; margin: 0; }
                 }
-                /* Días bloqueados: apagados como niebla */
-                .day-locked-col {
-                    filter: grayscale(30%);
-                }
+                .day-locked-col { filter: grayscale(25%); }
             `}</style>
 
             <div className="row flex-nowrap overflow-auto px-1 shadow-sm rounded-3 planner-row-container">
                 {diasLocales.map((dia, idx) => {
                     const inThePast = dia.fecha_exacta < hoyStr;
-                    const isToday = dia.fecha_exacta === hoyStr;
+                    const isToday   = dia.fecha_exacta === hoyStr;
                     const executionLocked = calcularExecLock(diasLocales, idx);
-
-                    // Un día está visualmente "bloqueado" si dias futuro con tarjetas pendientes de dias previos
-                    const dayIsLocked = executionLocked && !inThePast;
+                    const dayIsLocked     = executionLocked && !inThePast;
 
                     return (
                         <div key={dia.id} className={`col flex-grow-1 day-column${dayIsLocked ? ' day-locked-col' : ''}`}>
                             <div className="card h-100 border-0 shadow-sm" style={{
-                                opacity: inThePast ? 0.6 : dayIsLocked ? 0.55 : 1,
+                                opacity: inThePast ? 0.6 : dayIsLocked ? 0.6 : 1,
                                 pointerEvents: inThePast ? 'none' : 'auto',
                                 transition: 'opacity 0.3s',
-                                // Fondo rayado sutil para días bloqueados
                                 background: dayIsLocked
                                     ? 'repeating-linear-gradient(135deg, #f8fafc, #f8fafc 10px, #f1f5f9 10px, #f1f5f9 20px)'
                                     : undefined
                             }}>
-                                {/* ── Header de día ── */}
+                                {/* ── Header ── */}
                                 <div style={{
                                     padding: '10px 12px',
-                                    background: inThePast
-                                        ? '#94a3b8'
-                                        : dayIsLocked
-                                        ? '#cbd5e1'   // gris suave para bloqueados
-                                        : '#fff',
+                                    background: inThePast ? '#94a3b8' : dayIsLocked ? '#cbd5e1' : '#fff',
                                     borderBottom: '1px solid #f1f5f9',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        {/* Punto "Hoy" en lugar de fondo verde */}
                                         {isToday && (
                                             <span style={{
                                                 width: '8px', height: '8px', borderRadius: '50%',
-                                                background: '#2563eb',
-                                                display: 'inline-block',
-                                                boxShadow: '0 0 0 3px #bfdbfe',
-                                                flexShrink: 0
+                                                background: '#2563eb', display: 'inline-block',
+                                                boxShadow: '0 0 0 3px #bfdbfe', flexShrink: 0
                                             }} />
                                         )}
                                         <span style={{
-                                            fontWeight: '800',
-                                            fontSize: '0.85rem',
-                                            color: inThePast ? '#fff'
-                                                : dayIsLocked ? '#64748b'
-                                                : isToday ? '#1d4ed8'
-                                                : '#0f172a',
+                                            fontWeight: '800', fontSize: '0.85rem',
+                                            color: inThePast ? '#fff' : dayIsLocked ? '#64748b' : isToday ? '#1d4ed8' : '#0f172a',
                                         }}>
                                             {dia.nombre_dia}
                                         </span>
@@ -419,7 +651,7 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
                                             color: inThePast ? '#e2e8f0' : '#94a3b8',
                                             fontWeight: '500'
                                         }}>
-                                            ({dia.fecha_exacta?.substring(5)})
+                                            {dia.fecha_exacta?.substring(5)}
                                         </small>
                                         {inThePast && dia.tareas?.some(t => t.estado !== 'Finalizado') && (
                                             <span style={{ fontSize: '0.75rem' }}>❌</span>
@@ -427,9 +659,9 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
                                     </div>
                                 </div>
 
-                                {/* ── Cuerpo del día ── */}
+                                {/* ── Cuerpo ── */}
                                 <div className="card-body p-2 d-flex flex-column gap-2" style={{ backgroundColor: '#fdfdfd' }}>
-                                    {/* Aviso sutil de bloqueo de EJECUCIÓN (planificar sí se puede) */}
+                                    {/* Aviso de bloqueo (solo ejecución) */}
                                     {dayIsLocked && (
                                         <div style={{
                                             display: 'flex', alignItems: 'center', gap: '6px',
@@ -441,7 +673,7 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
                                         </div>
                                     )}
 
-                                    {/* Tareas: siempre visibles aunque esté bloqueado */}
+                                    {/* Tareas */}
                                     {dia.tareas?.length > 0 ? (
                                         dia.tareas.map(tarea => (
                                             <TareaCard
@@ -462,7 +694,7 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
                                         </div>
                                     )}
 
-                                    {/* AddTask: siempre disponible para días futuros y bloqueados */}
+                                    {/* Añadir tarea: disponible para días presentes y futuros */}
                                     {!inThePast && (
                                         <AddTaskInline diaId={dia.id} onTareaAgregada={inyectarTareaOptimista} />
                                     )}
