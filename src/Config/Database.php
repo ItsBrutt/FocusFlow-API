@@ -41,7 +41,8 @@ class Database {
             echo json_encode([
                 "success" => false, 
                 "message" => "Error de conexion a la base de datos", 
-                "details" => $e->getMessage() // Esto nos dirá si es pass incorrecto o SSL
+                "tried_user" => $this->username, // Esto nos dirá qué está leyendo realmente
+                "details" => $e->getMessage()
             ]);
             exit;
         }
