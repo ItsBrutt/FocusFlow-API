@@ -245,43 +245,79 @@ const ObjetivoView = () => {
                         <div style={{ marginBottom: '16px' }}>
                             <p style={{ fontSize: '0.72rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>FASES DEL PROYECTO</p>
                             <div className="meses-list-container" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                {objetivo.meses.map(mes => {
-                                    const isActive = mesSeleccionado?.id === mes.id;
-                                    const pct = parseFloat(mes.progreso_total || 0);
-                                    const color = objetivo.color || '#2563eb';
-                                    return (
-                                        <button key={mes.id} className="mes-btn" onClick={() => { setMesSeleccionado(mes); setSemanaSeleccionada(mes.semanas?.[0] || null); }}
-                                            style={{
-                                                flex: '1 1 140px', minWidth: '130px', maxWidth: '220px',
-                                                padding: '10px 14px', border: isActive ? `2px solid ${color}` : '1px solid #e2e8f0',
-                                                borderRadius: '10px', background: isActive ? '#fff' : '#f8fafc',
-                                                cursor: 'pointer', textAlign: 'left',
-                                                boxShadow: isActive ? `0 0 0 3px ${color}22` : 'none',
-                                                transition: 'all 0.15s'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                                                <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#94a3b8' }}>MES {mes.mes}</span>
-                                                <span style={{ fontSize: '0.72rem', fontWeight: '700', color: isActive ? color : '#94a3b8' }}>{pct.toFixed(0)}%</span>
-                                            </div>
-                                            {isActive ? (
-                                                <InlineEditable 
-                                                    value={mes.titulo} 
-                                                    onSave={t => handleRenameMonth(mes.id, t)} 
-                                                    placeholder="Define el foco de este mes..."
-                                                    style={{ fontSize: '0.82rem', fontWeight: '600', color: '#1e293b' }} 
-                                                />
-                                            ) : (
-                                                <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', opacity: mes.titulo ? 1 : 0.6 }}>
-                                                    {mes.titulo || 'Sin foco definido'}
-                                                </span>
-                                            )}
-                                            <div style={{ height: '3px', background: '#e2e8f0', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${pct}%`, height: '100%', background: color, transition: '0.4s' }} />
-                                            </div>
-                                        </button>
-                                    );
-                                })}
+                                {objetivo.meses
+                                    // Revelación progresiva: mostrar solo meses con actividad + el siguiente
+                                    .filter((mes, idx, all) => {
+                                        const tieneActividad = mes.semanas && mes.semanas.length > 0;
+                                        const mesAnteriorTieneActividad = idx === 0 || (all[idx - 1].semanas && all[idx - 1].semanas.length > 0);
+                                        return tieneActividad || (mesAnteriorTieneActividad && idx === all.findIndex(m => !m.semanas || m.semanas.length === 0));
+                                    })
+                                    .map((mes, _, filteredMeses) => {
+                                        const isActive = mesSeleccionado?.id === mes.id;
+                                        const pct = parseFloat(mes.progreso_total || 0);
+                                        const color = objetivo.color || '#2563eb';
+                                        const tieneActividad = mes.semanas && mes.semanas.length > 0;
+                                        const isNextPhase = !tieneActividad; // Es el nuevo mes a iniciar
+
+                                        // Botón de "siguiente fase" (mes aún sin iniciar)
+                                        if (isNextPhase) {
+                                            return (
+                                                <button key={mes.id} className="mes-btn"
+                                                    onClick={() => { setMesSeleccionado(mes); setSemanaSeleccionada(null); }}
+                                                    style={{
+                                                        flex: '0 0 auto',
+                                                        padding: '10px 18px',
+                                                        border: `2px dashed ${isActive ? color : '#cbd5e1'}`,
+                                                        borderRadius: '10px',
+                                                        background: isActive ? '#eff6ff' : 'transparent',
+                                                        cursor: 'pointer', textAlign: 'center',
+                                                        color: isActive ? color : '#94a3b8',
+                                                        fontSize: '0.82rem', fontWeight: '600',
+                                                        transition: 'all 0.15s',
+                                                        display: 'flex', alignItems: 'center', gap: '6px'
+                                                    }}
+                                                >
+                                                    <span style={{ fontSize: '1rem' }}>+</span>
+                                                    Planificar Fase {mes.mes}
+                                                </button>
+                                            );
+                                        }
+
+                                        // Mes con actividad: tarjeta normal
+                                        return (
+                                            <button key={mes.id} className="mes-btn" onClick={() => { setMesSeleccionado(mes); setSemanaSeleccionada(mes.semanas?.[0] || null); }}
+                                                style={{
+                                                    flex: '1 1 140px', minWidth: '130px', maxWidth: '220px',
+                                                    padding: '10px 14px', border: isActive ? `2px solid ${color}` : '1px solid #e2e8f0',
+                                                    borderRadius: '10px', background: isActive ? '#fff' : '#f8fafc',
+                                                    cursor: 'pointer', textAlign: 'left',
+                                                    boxShadow: isActive ? `0 0 0 3px ${color}22` : 'none',
+                                                    transition: 'all 0.15s'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                    <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#94a3b8' }}>MES {mes.mes}</span>
+                                                    <span style={{ fontSize: '0.72rem', fontWeight: '700', color: isActive ? color : '#94a3b8' }}>{pct.toFixed(0)}%</span>
+                                                </div>
+                                                {isActive ? (
+                                                    <InlineEditable
+                                                        value={mes.titulo}
+                                                        onSave={t => handleRenameMonth(mes.id, t)}
+                                                        placeholder="Define el foco de este mes..."
+                                                        style={{ fontSize: '0.82rem', fontWeight: '600', color: '#1e293b' }}
+                                                    />
+                                                ) : (
+                                                    <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', opacity: mes.titulo ? 1 : 0.6 }}>
+                                                        {mes.titulo || 'Sin foco definido'}
+                                                    </span>
+                                                )}
+                                                <div style={{ height: '3px', background: '#e2e8f0', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
+                                                    <div style={{ width: `${pct}%`, height: '100%', background: color, transition: '0.4s' }} />
+                                                </div>
+                                            </button>
+                                        );
+                                    })
+                                }
                             </div>
                         </div>
 
