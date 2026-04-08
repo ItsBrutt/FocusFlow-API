@@ -24,7 +24,7 @@ class Usuario {
      * Busca un usuario por su email
      */
     public function getByEmail(string $email): array|false {
-        $query = "SELECT id, nombre, email, password_hash, fecha_registro FROM " . $this->table_name . " WHERE email = :email LIMIT 0,1";
+        $query = "SELECT id, nombre, email, password_hash, fecha_registro FROM " . $this->table_name . " WHERE email = :email LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':email', $email, PDO::PARAM_STR);
         $stmt->execute();
@@ -59,7 +59,7 @@ class Usuario {
      * Verifica que el email no esté en uso (método útil extra)
      */
     public function emailExists(string $email): bool {
-        $query = "SELECT id FROM " . $this->table_name . " WHERE email = :email LIMIT 0,1";
+        $query = "SELECT id FROM " . $this->table_name . " WHERE email = :email LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':email', $email, PDO::PARAM_STR);
         $stmt->execute();

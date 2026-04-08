@@ -19,11 +19,11 @@ class Database {
     private function __construct() {
         $this->host = getenv('DB_HOST') ?: '127.0.0.1';
         $this->db_name = getenv('DB_NAME') ?: 'focus_flow_db';
-        $this->username = getenv('DB_USER') ?: 'root';
+        $this->username = getenv('DB_USER') ?: 'postgres';
         $this->password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
-        $port = getenv('DB_PORT') ?: '3306';
+        $port = getenv('DB_PORT') ?: '5432';
 
-        $dsn = "mysql:host={$this->host};port={$port};dbname={$this->db_name};charset={$this->charset}";
+        $dsn = "pgsql:host={$this->host};port={$port};dbname={$this->db_name}";
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
