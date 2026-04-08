@@ -53,10 +53,14 @@ class Router {
     }
 
     public function dispatch(string $uri, string $method) {
-        // En algunas configuraciones existe un subdirectorio global que estorba
         $base_path = str_replace('/index.php', '', $_SERVER['SCRIPT_NAME']);
-        if (strpos($uri, $base_path) === 0) {
+        if (!empty($base_path) && strpos($uri, $base_path) === 0) {
             $uri = substr($uri, strlen($base_path));
+        }
+
+        // Si el URI quedó vacío (caso de ruta raíz en algunos servidores), normalizar a '/'
+        if ($uri === '') {
+            $uri = '/';
         }
 
         foreach ($this->routes as $route) {
