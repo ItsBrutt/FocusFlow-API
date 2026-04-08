@@ -41,14 +41,7 @@ class Database {
             echo json_encode([
                 "success" => false, 
                 "message" => "Error de conexion a la base de datos", 
-                "env_check" => [
-                    "host" => !empty($this->host),
-                    "db" => !empty($this->db_name),
-                    "user" => !empty($this->username),
-                    "pass" => !empty($this->password)
-                ],
-                "tried_user" => $this->username,
-                "details" => $e->getMessage()
+                "details" => "Error interno del servidor"
             ]);
             exit;
         }
