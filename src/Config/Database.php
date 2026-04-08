@@ -23,7 +23,7 @@ class Database {
         $this->password = getenv('FF_DB_PASS');
         $port = getenv('FF_DB_PORT') ?: '6543';
 
-        $dsn = "pgsql:host={$this->host};port={$port};dbname={$this->db_name};sslmode=require";
+        $dsn = "pgsql:host={$this->host};port={$port};dbname={$this->db_name};user={$this->username};password={$this->password};sslmode=require";
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -31,7 +31,7 @@ class Database {
         ];
 
         try {
-            $this->conn = new PDO($dsn, $this->username, $this->password, $options);
+            $this->conn = new PDO($dsn, null, null, $options);
         } catch (PDOException $e) {
             // Enviar error detallado a los logs de Vercel
             error_log("Fallo de conexión PDO: " . $e->getMessage());
