@@ -429,40 +429,42 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
 
                                 {/* ── Cuerpo del día ── */}
                                 <div className="card-body p-2 d-flex flex-column gap-2" style={{ backgroundColor: '#fdfdfd' }}>
-                                    {dayIsLocked ? (
-                                        /* Vista especial para días bloqueados */
-                                        <div style={{ textAlign: 'center', padding: '20px 8px' }}>
-                                            <div style={{ fontSize: '1.6rem', marginBottom: '6px' }}>🔒</div>
-                                            <p style={{ fontSize: '0.72rem', color: '#64748b', margin: 0, lineHeight: 1.4, fontStyle: 'italic' }}>
-                                                Completa el día anterior para descubrir este día
-                                            </p>
+                                    {/* Aviso sutil de bloqueo de EJECUCIÓN (planificar sí se puede) */}
+                                    {dayIsLocked && (
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                            padding: '6px 10px', borderRadius: '7px',
+                                            background: '#fef9c3', border: '1px solid #fde68a',
+                                            fontSize: '0.7rem', color: '#92400e', fontStyle: 'italic'
+                                        }}>
+                                            🔒 Puedes planificar, pero completa el día anterior para ejecutar
                                         </div>
-                                    ) : (
-                                        <>
-                                            {dia.tareas?.length > 0 ? (
-                                                dia.tareas.map(tarea => (
-                                                    <TareaCard
-                                                        key={tarea.id}
-                                                        tarea={tarea}
-                                                        diaId={dia.id}
-                                                        executionLocked={executionLocked}
-                                                        inThePast={inThePast}
-                                                        onComplete={handleCompletarTarea}
-                                                        onDelete={eliminarTareaOptimista}
-                                                        onEdit={editarTareaOptimista}
-                                                        isUpdating={updating === tarea.id}
-                                                    />
-                                                ))
-                                            ) : (
-                                                <div className="text-center text-muted fst-italic p-2 small">
-                                                    Lienzo en blanco
-                                                </div>
-                                            )}
+                                    )}
 
-                                            {!inThePast && (
-                                                <AddTaskInline diaId={dia.id} onTareaAgregada={inyectarTareaOptimista} />
-                                            )}
-                                        </>
+                                    {/* Tareas: siempre visibles aunque esté bloqueado */}
+                                    {dia.tareas?.length > 0 ? (
+                                        dia.tareas.map(tarea => (
+                                            <TareaCard
+                                                key={tarea.id}
+                                                tarea={tarea}
+                                                diaId={dia.id}
+                                                executionLocked={executionLocked}
+                                                inThePast={inThePast}
+                                                onComplete={handleCompletarTarea}
+                                                onDelete={eliminarTareaOptimista}
+                                                onEdit={editarTareaOptimista}
+                                                isUpdating={updating === tarea.id}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="text-center text-muted fst-italic p-2 small">
+                                            Lienzo en blanco
+                                        </div>
+                                    )}
+
+                                    {/* AddTask: siempre disponible para días futuros y bloqueados */}
+                                    {!inThePast && (
+                                        <AddTaskInline diaId={dia.id} onTareaAgregada={inyectarTareaOptimista} />
                                     )}
                                 </div>
                             </div>
