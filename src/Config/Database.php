@@ -33,10 +33,16 @@ class Database {
         try {
             $this->conn = new PDO($dsn, $this->username, $this->password, $options);
         } catch (PDOException $e) {
-            // En caso de error, retornamos JSON para mantener el formato API
+            // Enviar error detallado a los logs de Vercel
+            error_log("Fallo de conexión PDO: " . $e->getMessage());
+            
             header('HTTP/1.1 500 Internal Server Error');
             header('Content-Type: application/json; charset=UTF-8');
-            echo json_encode(["message" => "Error de conexion a la base de datos", "error" => $e->getMessage()]);
+            echo json_encode([
+                "success" => false, 
+                "message" => "Error de conexion a la base de datos", 
+                "details" => $e->getMessage() // Esto nos dirá si es pass incorrecto o SSL
+            ]);
             exit;
         }
     }
