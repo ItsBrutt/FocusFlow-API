@@ -53,6 +53,7 @@ class Router {
     }
 
     public function dispatch(string $uri, string $method) {
+        // Quitar base path del script (útil en entorno local)
         $base_path = str_replace('/index.php', '', $_SERVER['SCRIPT_NAME']);
         $base_path = rtrim($base_path, '/');
         
@@ -60,7 +61,14 @@ class Router {
             $uri = substr($uri, strlen($base_path));
         }
 
-        // Normalizar URI
+        // Normalizar URI: quitar prefijo /api si está presente (Vercel lo incluye en la URI)
+        if (strpos($uri, '/api/') === 0) {
+            $uri = substr($uri, 4); // quita "/api" → deja "/register", "/tareas", etc.
+        } elseif ($uri === '/api') {
+            $uri = '/';
+        }
+
+        // Normalizar barras
         $uri = '/' . ltrim($uri, '/');
         if ($uri === '//') $uri = '/';
 
