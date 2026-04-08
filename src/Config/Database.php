@@ -17,11 +17,11 @@ class Database {
     private string $charset = 'utf8mb4';
 
     private function __construct() {
-        $this->host = getenv('DB_HOST') ?: '127.0.0.1';
-        $this->db_name = getenv('DB_NAME') ?: 'focus_flow_db';
-        $this->username = getenv('DB_USER') ?: 'postgres';
-        $this->password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
-        $port = getenv('DB_PORT') ?: '5432';
+        $this->host = getenv('DB_HOST');
+        $this->db_name = getenv('DB_NAME');
+        $this->username = getenv('DB_USER');
+        $this->password = getenv('DB_PASS');
+        $port = getenv('DB_PORT') ?: '6543';
 
         $dsn = "pgsql:host={$this->host};port={$port};dbname={$this->db_name};sslmode=require";
         $options = [
