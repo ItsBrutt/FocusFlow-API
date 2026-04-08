@@ -73,7 +73,8 @@ class Tarea {
     public function create(): bool {
         $query = "INSERT INTO " . $this->table_name . "
             (dia_id, categoria, descripcion, bloque_horario, hora_inicio, duracion_minutos, prioridad_orden)
-            VALUES (:dia_id, :categoria, :descripcion, :bloque_horario, :hora_inicio, :duracion_minutos, :prioridad_orden)";
+            VALUES (:dia_id, :categoria, :descripcion, :bloque_horario, :hora_inicio, :duracion_minutos, :prioridad_orden)
+            RETURNING id";
         
         $stmt = $this->conn->prepare($query);
         
@@ -92,7 +93,9 @@ class Tarea {
         $stmt->bindParam(':prioridad_orden',$this->prioridad_orden,PDO::PARAM_INT);
 
         if ($stmt->execute()) {
-            $this->id = (int)$this->conn->lastInsertId();
+            // PostgreSQL: RETURNING id devuelve el ID directamente
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->id = (int)($row['id'] ?? 0);
             return true;
         }
 

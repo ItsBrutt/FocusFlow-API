@@ -67,7 +67,7 @@ class TareaController {
             $rTraza = $rStmt->fetch(\PDO::FETCH_ASSOC);
 
             if ($rTraza) {
-                $db->prepare("UPDATE Planner_Semanal SET completada = 0 WHERE id = ? AND completada = 1")
+                $db->prepare("UPDATE Planner_Semanal SET completada = false WHERE id = ? AND completada = true")
                    ->execute([$rTraza['semana_id']]);
                 $this->recalcularProgresoMes($rTraza['mes_id'], $db); // Nuevo denominador = nuevo progreso
             }
@@ -170,8 +170,15 @@ class TareaController {
                     $stmtFaltan->execute([$traza['dia_id']]);
 
                     if ($stmtFaltan->fetchColumn() == 0) {
-                        $db->prepare("UPDATE Dias SET bloqueado = 0 WHERE planner_semanal_id = ? AND id > ? ORDER BY id ASC LIMIT 1")
-                           ->execute([$traza['semana_id'], $traza['dia_id']]);
+                        // PostgreSQL no soporta ORDER BY/LIMIT en UPDATE: usar subquery
+                        $db->prepare("
+                            UPDATE Dias SET bloqueado = false
+                            WHERE id = (
+                                SELECT id FROM Dias
+                                WHERE planner_semanal_id = ? AND id > ?
+                                ORDER BY id ASC LIMIT 1
+                            )
+                        ")->execute([$traza['semana_id'], $traza['dia_id']]);
                     }
                 }
 
@@ -191,9 +198,9 @@ class TareaController {
 
                 // Si al desmarcarla ya no está completa, marcar semana como no completada (ps.completada=0)
                 if ($nuevo_estado !== 'Finalizado') {
-                    $db->prepare("UPDATE Planner_Semanal SET completada = 0 WHERE id = ?")->execute([$traza['semana_id']]);
+                    $db->prepare("UPDATE Planner_Semanal SET completada = false WHERE id = ?")->execute([$traza['semana_id']]);
                 } else if ($j['dias_totales'] == 5 && $j['dias_con_tareas'] == 5 && $j['tareas_pendientes'] == 0) {
-                    $db->prepare("UPDATE Planner_Semanal SET completada = 1 WHERE id = ?")->execute([$traza['semana_id']]);
+                    $db->prepare("UPDATE Planner_Semanal SET completada = true WHERE id = ?")->execute([$traza['semana_id']]);
                 }
                 
                 // Recalcular el mes OTRA VEZ por si cambió el estado de la semana (esto afecta al modelo de 25%)
@@ -278,8 +285,8 @@ class TareaController {
 
         // Revocar trofeo y recalcular progreso del mes
         if ($traza) {
-            $db->prepare("UPDATE Planner_Semanal SET completada = 0 WHERE id = ? AND completada = 1")->execute([$traza['semana_id']]);
-            $this->recalcularProgresoMes($traza['mes_id'], $db); // Tarea eliminada = nuevo numerador y denominador
+            $db->prepare("UPDATE Planner_Semanal SET completada = false WHERE id = ? AND completada = true")->execute([$traza['semana_id']]);
+            $this->recalcularProgresoMes($traza['mes_id'], $db);
         }
 
         Response::json(200, "Tarea eliminada.");

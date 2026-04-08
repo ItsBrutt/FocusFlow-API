@@ -167,8 +167,14 @@ class ObjetivoController {
         if (empty($data->titulo)) Response::json(400, "El titulo es requerido.");
 
         $db = \App\Config\Database::getInstance()->getConnection();
-        $q = "UPDATE Objetivos_Mensuales om JOIN Objetivos_Anuales oa ON om.objetivo_anual_id = oa.id
-              SET om.titulo = ? WHERE om.id = ? AND oa.id = ? AND oa.usuario_id = ?";
+        // PostgreSQL no soporta JOIN en UPDATE: usamos subquery en WHERE
+        $q = "UPDATE Objetivos_Mensuales
+              SET titulo = ?
+              WHERE id = ?
+                AND objetivo_anual_id = (
+                    SELECT id FROM Objetivos_Anuales
+                    WHERE id = ? AND usuario_id = ?
+                )";
         $stmt = $db->prepare($q);
         $stmt->execute([htmlspecialchars(strip_tags($data->titulo)), (int)$mes_id, (int)$objetivo_id, $payload['id']]);
 
@@ -189,11 +195,15 @@ class ObjetivoController {
         if (empty($data->titulo)) Response::json(400, "El titulo es requerido.");
 
         $db = \App\Config\Database::getInstance()->getConnection();
-        $q = "UPDATE Planner_Semanal ps
-              JOIN Objetivos_Mensuales om ON ps.objetivo_mensual_id = om.id
-              JOIN Objetivos_Anuales oa ON om.objetivo_anual_id = oa.id
-              SET ps.titulo = ?
-              WHERE ps.id = ? AND oa.id = ? AND oa.usuario_id = ?";
+        // PostgreSQL no soporta JOIN en UPDATE: usamos subquery en WHERE
+        $q = "UPDATE Planner_Semanal
+              SET titulo = ?
+              WHERE id = ?
+                AND objetivo_mensual_id IN (
+                    SELECT om.id FROM Objetivos_Mensuales om
+                    JOIN Objetivos_Anuales oa ON om.objetivo_anual_id = oa.id
+                    WHERE oa.id = ? AND oa.usuario_id = ?
+                )";
         $stmt = $db->prepare($q);
         $stmt->execute([htmlspecialchars(strip_tags($data->titulo)), (int)$semana_id, (int)$objetivo_id, $payload['id']]);
 

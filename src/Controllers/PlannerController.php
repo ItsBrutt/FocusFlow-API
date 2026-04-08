@@ -68,7 +68,13 @@ class PlannerController {
             WHERE oa.usuario_id = :uid
               AND d.fecha_exacta BETWEEN :lunes AND :viernes
             ORDER BY d.fecha_exacta ASC, oa.id ASC, 
-                     FIELD(t.bloque_horario, 'Madrugada','Mañana','Tarde','Noche'),
+                     CASE t.bloque_horario
+                         WHEN 'Madrugada' THEN 1
+                         WHEN 'Mañana'    THEN 2
+                         WHEN 'Tarde'     THEN 3
+                         WHEN 'Noche'     THEN 4
+                         ELSE 5
+                     END,
                      t.prioridad_orden ASC
         ";
 
