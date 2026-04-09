@@ -34,6 +34,10 @@ class TareaController {
         $stmtDia->execute([(int)$data->dia_id]);
         $diaDb = $stmtDia->fetch(\PDO::FETCH_ASSOC);
 
+        if (!$diaDb) {
+            Response::json(404, "No se encontró el día en la base de datos. Puede que la semana no esté correctamente iniciada.");
+        }
+
         if (strtotime($diaDb['fecha_fin']) < strtotime(date('Y-m-d'))) {
             Response::json(403, "Esta semana ya es parte de tu historial inmutable. No puedes agregar tareas en el pasado.");
         }
