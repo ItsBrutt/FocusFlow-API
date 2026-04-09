@@ -31,14 +31,11 @@ class ErrorHandler {
                       " | Archivo: " . $e->getFile() . " (Linea: " . $e->getLine() . ")\n" . 
                       $e->getTraceAsString() . "\n" . str_repeat("-", 50) . "\n";
         
-        // Registrar en logs privados 
-        $logDir = __DIR__ . '/../../logs';
-        if (!is_dir($logDir)) {
-            mkdir($logDir, 0777, true);
-        }
-        error_log($logMessage, 3, $logDir . '/error.log');
+        // En Vercel (y entornos serverless) el filesystem es read-only.
+        // Usamos error_log estándar (stderr) que Vercel captura en sus propios logs.
+        error_log($logMessage);
 
-        // Respuesta segura y generica para el frontend (Sin exponer info)
-        Response::json(500, "Internal Server Error. Consulte los logs de sistema.");
+        // TODO: Remover el detalle del mensaje antes de ir a producción final
+        Response::json(500, "Error: " . $e->getMessage() . " en " . basename($e->getFile()) . ":" . $e->getLine());
     }
 }
