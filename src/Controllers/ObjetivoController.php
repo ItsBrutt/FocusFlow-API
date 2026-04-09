@@ -133,9 +133,9 @@ class ObjetivoController {
                 : date('Y-m-d', strtotime('monday this week'));
             $f_fin = date('Y-m-d', strtotime($f_inicio . ' +4 days'));
 
-            $stmtSem = $db->prepare("INSERT INTO Planner_Semanal (objetivo_mensual_id, numero_semana, fecha_inicio, fecha_fin) VALUES (?, ?, ?, ?)");
+            $stmtSem = $db->prepare("INSERT INTO Planner_Semanal (objetivo_mensual_id, numero_semana, fecha_inicio, fecha_fin) VALUES (?, ?, ?, ?) RETURNING id");
             $stmtSem->execute([(int)$mes_id, $numero_semana, $f_inicio, $f_fin]);
-            $semana_id = $db->lastInsertId();
+            $semana_id = (int)$stmtSem->fetchColumn();
 
             $diasNombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
             $stmtDia = $db->prepare("INSERT INTO Dias (planner_semanal_id, nombre_dia, fecha_exacta, bloqueado) VALUES (?, ?, ?, ?)");
