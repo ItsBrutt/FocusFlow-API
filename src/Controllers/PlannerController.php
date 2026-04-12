@@ -23,10 +23,16 @@ class PlannerController {
 
         $db = Database::getInstance()->getConnection();
 
-        // Determinar el Lunes y Viernes de la semana actual
+        // Determinar el Lunes y Viernes de la semana a mostrar
+        // Si hoy es fin de semana (Sábado o Domingo), saltamos a la próxima semana 
+        // para que el usuario vea lo que acaba de planificar.
         $hoy = date('Y-m-d');
         $diaSemana = (int)date('N', strtotime($hoy)); // 1=Lun, 7=Dom
-        $lunes = date('Y-m-d', strtotime($hoy . ' -' . ($diaSemana - 1) . ' days'));
+        
+        $lunes = ($diaSemana >= 6) 
+            ? date('Y-m-d', strtotime('next monday', strtotime('yesterday')))
+            : date('Y-m-d', strtotime($hoy . ' -' . ($diaSemana - 1) . ' days'));
+        
         $viernes = date('Y-m-d', strtotime($lunes . ' +4 days'));
 
         $query = "
