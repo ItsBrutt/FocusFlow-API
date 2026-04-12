@@ -59,7 +59,7 @@ CREATE TABLE Dias (
 CREATE TABLE Tareas (
     id SERIAL PRIMARY KEY,
     dia_id INT NOT NULL,
-    categoria TEXT CHECK (categoria IN ('Backend', 'React', 'Entrenamiento', 'Meditacion')) NOT NULL,
+    categoria TEXT CHECK (categoria IN ('Backend', 'React', 'Javascript', 'Frontend', 'Diseño', 'Entrenamiento', 'Meditacion', 'Lectura', 'Inglés', 'Freelance', 'Salud', 'Social', 'General')) NOT NULL,
     bloque_horario TEXT CHECK (bloque_horario IN ('Madrugada','Mañana','Tarde','Noche')) DEFAULT 'Mañana', -- Agregado en Migración Nivel 8
     hora_inicio TIME DEFAULT '10:00:00', -- Agregado en Migración Nivel 9
     duracion_minutos INT DEFAULT 60, -- Agregado en Migración Nivel 9

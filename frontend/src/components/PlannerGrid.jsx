@@ -204,10 +204,17 @@ const AddTaskInline = ({ diaId, onTareaAgregada }) => {
             <datalist id="categorias-list">
                 <option value="Backend" />
                 <option value="React" />
+                <option value="Javascript" />
+                <option value="Frontend" />
+                <option value="Diseño" />
                 <option value="Entrenamiento" />
                 <option value="Meditacion" />
                 <option value="Lectura" />
                 <option value="Inglés" />
+                <option value="Freelance" />
+                <option value="Salud" />
+                <option value="Social" />
+                <option value="General" />
             </datalist>
 
             {expanded ? (
