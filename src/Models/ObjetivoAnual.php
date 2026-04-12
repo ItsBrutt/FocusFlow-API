@@ -24,7 +24,7 @@ class ObjetivoAnual {
      * Crea un nuevo objetivo anual para un usuario
      */
     public function create(): bool {
-        $query = "INSERT INTO " . $this->table_name . " (usuario_id, anio, titulo, descripcion) VALUES (:usuario_id, :anio, :titulo, :descripcion)";
+        $query = "INSERT INTO " . $this->table_name . " (usuario_id, anio, titulo, descripcion) VALUES (:usuario_id, :anio, :titulo, :descripcion) RETURNING id";
         
         $stmt = $this->conn->prepare($query);
 
@@ -39,7 +39,7 @@ class ObjetivoAnual {
         $stmt->bindParam(':descripcion', $this->descripcion, PDO::PARAM_STR);
 
         if ($stmt->execute()) {
-            $this->id = (int)$this->conn->lastInsertId();
+            $this->id = (int)$stmt->fetchColumn();
             return true;
         }
 

@@ -33,7 +33,7 @@ class Mes {
             return false; // Mes ya asignado
         }
 
-        $query = "INSERT INTO " . $this->table_name . " (objetivo_anual_id, mes, titulo) VALUES (:objetivo_anual_id, :mes, :titulo)";
+        $query = "INSERT INTO " . $this->table_name . " (objetivo_anual_id, mes, titulo) VALUES (:objetivo_anual_id, :mes, :titulo) RETURNING id";
         
         $stmt = $this->conn->prepare($query);
 
@@ -46,7 +46,7 @@ class Mes {
         $stmt->bindParam(':titulo', $this->titulo, PDO::PARAM_STR);
 
         if ($stmt->execute()) {
-            $this->id = (int)$this->conn->lastInsertId();
+            $this->id = (int)$stmt->fetchColumn();
             return true;
         }
 

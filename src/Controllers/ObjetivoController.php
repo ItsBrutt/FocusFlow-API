@@ -129,8 +129,8 @@ class ObjetivoController {
             $lastDate = $stmtLD->fetchColumn();
 
             $f_inicio = $lastDate 
-                ? date('Y-m-d', strtotime($lastDate . ' +3 days next monday'))
-                : date('Y-m-d', strtotime('monday this week'));
+                ? date('Y-m-d', strtotime('monday', strtotime($lastDate . ' +1 day')))
+                : date('Y-m-d', strtotime('next monday', strtotime('yesterday')));
             $f_fin = date('Y-m-d', strtotime($f_inicio . ' +4 days'));
 
             $stmtSem = $db->prepare("INSERT INTO Planner_Semanal (objetivo_mensual_id, numero_semana, fecha_inicio, fecha_fin) VALUES (?, ?, ?, ?) RETURNING id");

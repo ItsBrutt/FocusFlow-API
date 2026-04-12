@@ -93,13 +93,12 @@ class Tarea {
         $stmt->bindParam(':prioridad_orden',$this->prioridad_orden,PDO::PARAM_INT);
 
         if ($stmt->execute()) {
-            // PostgreSQL: RETURNING id devuelve el ID directamente
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $this->id = (int)($row['id'] ?? 0);
             return true;
+        } else {
+            return false;
         }
-
-        return false;
     }
 
     /**
