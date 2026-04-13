@@ -40,12 +40,12 @@ const Dashboard = () => {
     if (error) return <div className="alert alert-danger m-4">{error}</div>;
 
     return (
-        <div>
+        <main>
             <Navbar />
 
             <div className="container">
                 <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h3>Tus Objetivos FocusFlow</h3>
+                    <h1 className="h3 mb-0 fw-bold">Tus Objetivos FocusFlow</h1>
                     {treeData.length > 0 && (
                         <button className="btn btn-primary shadow-sm fw-bold" onClick={() => setIsModalOpen(true)}>
                             + Nuevo Objetivo
@@ -55,7 +55,7 @@ const Dashboard = () => {
 
                 {treeData.length === 0 ? (
                     <div className="alert alert-info text-center py-5 shadow-sm border-0">
-                        <h4 className="mb-3">Aún no tienes objetivos anuales registrados.</h4>
+                        <h2 className="h4 mb-3">Aún no tienes objetivos anuales registrados.</h2>
                         <p className="text-muted mb-4">Empieza el año trazando tus metas. Da el primer paso hacia una mayor productividad.</p>
                         <button className="btn btn-lg btn-primary fw-bold px-5 rounded-pill shadow" onClick={() => setIsModalOpen(true)}>
                             + Crear mi primer Objetivo Anual
@@ -75,7 +75,7 @@ const Dashboard = () => {
                 onClose={() => setIsModalOpen(false)} 
                 onObjetivoCreated={handleObjetivoCreated} 
             />
-        </div>
+        </main>
     );
 };
 
