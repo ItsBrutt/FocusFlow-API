@@ -15,7 +15,7 @@ class Dashboard {
     public function getObjectiveTree(int $objetivo_id, int $usuario_id): ?array {
         $query = "
             SELECT 
-                oa.id as oa_id, oa.anio, oa.titulo as oa_titulo, oa.descripcion as oa_desc, oa.completado as oa_completado,
+                oa.id as oa_id, oa.anio, oa.titulo as oa_titulo, oa.descripcion as oa_desc, oa.color as oa_color, oa.completado as oa_completado,
                 om.id as om_id, om.mes, om.titulo as om_titulo, om.progreso_total,
                 ps.id as ps_id, ps.numero_semana, ps.titulo as ps_titulo, ps.peso_mensual, ps.fecha_inicio, ps.fecha_fin, ps.completada as ps_completada,
                 d.id as d_id, d.nombre_dia, d.fecha_exacta, d.peso_semanal, d.bloqueado, d.estado_mental, d.reflexion_diaria,
@@ -48,6 +48,7 @@ class Dashboard {
                     'anio' => $row['anio'],
                     'titulo' => $row['oa_titulo'],
                     'descripcion' => $row['oa_desc'],
+                    'color' => $row['oa_color'] ?? '#0d6efd',
                     'completado' => (bool)$row['oa_completado'],
                     'progreso_total' => 0, // Will compute later
                     'meses' => []
@@ -140,7 +141,7 @@ class Dashboard {
     public function getUserDashboardTree(int $usuario_id): array {
         $query = "
             SELECT 
-                oa.id as oa_id, oa.anio, oa.titulo as oa_titulo, oa.descripcion as oa_desc, oa.completado as oa_completado,
+                oa.id as oa_id, oa.anio, oa.titulo as oa_titulo, oa.descripcion as oa_desc, oa.color as oa_color, oa.completado as oa_completado,
                 om.id as om_id, om.mes, om.titulo as om_titulo, om.progreso_total,
                 ps.id as ps_id, ps.numero_semana, ps.peso_mensual, ps.fecha_inicio, ps.fecha_fin, ps.completada as ps_completada,
                 d.id as d_id, d.nombre_dia, d.fecha_exacta, d.peso_semanal, d.bloqueado, d.estado_mental, d.reflexion_diaria,
@@ -171,6 +172,7 @@ class Dashboard {
                     'anio' => $row['anio'],
                     'titulo' => $row['oa_titulo'],
                     'descripcion' => $row['oa_desc'],
+                    'color' => $row['oa_color'] ?? '#0d6efd',
                     'completado' => (bool)$row['oa_completado'],
                     'meses' => []
                 ];

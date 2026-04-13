@@ -28,6 +28,7 @@ class ObjetivoController {
                 $objetivo->anio = (int) $data->anio;
                 $objetivo->titulo = htmlspecialchars(strip_tags($data->titulo));
                 $objetivo->descripcion = htmlspecialchars(strip_tags($data->descripcion ?? ''));
+                $objetivo->color = htmlspecialchars(strip_tags($data->color ?? '#0d6efd'));
 
                 if (!$objetivo->create()) {
                     throw new \Exception("Error al crear el objetivo base.");
@@ -243,6 +244,7 @@ class ObjetivoController {
         $params = [];
         if (!empty($data->titulo))      { $fields[] = 'titulo = ?';      $params[] = htmlspecialchars(strip_tags($data->titulo)); }
         if (!empty($data->descripcion)) { $fields[] = 'descripcion = ?'; $params[] = htmlspecialchars(strip_tags($data->descripcion)); }
+        if (!empty($data->color))       { $fields[] = 'color = ?';       $params[] = htmlspecialchars(strip_tags($data->color)); }
 
         if (empty($fields)) Response::json(400, "Sin campos para actualizar.");
 

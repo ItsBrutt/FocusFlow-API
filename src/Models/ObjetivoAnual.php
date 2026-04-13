@@ -14,6 +14,7 @@ class ObjetivoAnual {
     public int $anio;
     public string $titulo;
     public string $descripcion;
+    public string $color = '#0d6efd';
     public bool $completado;
 
     public function __construct() {
@@ -24,19 +25,21 @@ class ObjetivoAnual {
      * Crea un nuevo objetivo anual para un usuario
      */
     public function create(): bool {
-        $query = "INSERT INTO " . $this->table_name . " (usuario_id, anio, titulo, descripcion) VALUES (:usuario_id, :anio, :titulo, :descripcion) RETURNING id";
+        $query = "INSERT INTO " . $this->table_name . " (usuario_id, anio, titulo, descripcion, color) VALUES (:usuario_id, :anio, :titulo, :descripcion, :color) RETURNING id";
         
         $stmt = $this->conn->prepare($query);
 
         // Limpiar
         $this->titulo = htmlspecialchars(strip_tags($this->titulo));
         $this->descripcion = htmlspecialchars(strip_tags($this->descripcion));
+        $this->color = htmlspecialchars(strip_tags($this->color));
         
         // Bind parameters
         $stmt->bindParam(':usuario_id', $this->usuario_id, PDO::PARAM_INT);
         $stmt->bindParam(':anio', $this->anio, PDO::PARAM_INT);
         $stmt->bindParam(':titulo', $this->titulo, PDO::PARAM_STR);
         $stmt->bindParam(':descripcion', $this->descripcion, PDO::PARAM_STR);
+        $stmt->bindParam(':color', $this->color, PDO::PARAM_STR);
 
         if ($stmt->execute()) {
             $this->id = (int)$stmt->fetchColumn();
