@@ -126,6 +126,26 @@ const ObjetivoView = () => {
     };
 
     const handleInitWeek = async (mesId, numeroSemana) => {
+        // Validación de derrota previa para disciplina
+        let isFailedPrevious = false;
+        const targetMes = objetivo.meses.find(m => m.id === mesId);
+        
+        if (targetMes) {
+            if (numeroSemana === 1 && targetMes.mes > 1) {
+                const mesAnterior = objetivo.meses.find(m => m.mes === targetMes.mes - 1);
+                const sem4 = mesAnterior?.semanas?.find(s => s.numero_semana === 4);
+                isFailedPrevious = sem4 && !sem4.completada && new Date(sem4.fecha_fin + 'T23:59:59') < new Date();
+            } else if (numeroSemana > 1) {
+                const semPrev = targetMes.semanas?.find(s => s.numero_semana === numeroSemana - 1);
+                isFailedPrevious = semPrev && !semPrev.completada && new Date(semPrev.fecha_fin + 'T23:59:59') < new Date();
+            }
+        }
+
+        if (isFailedPrevious) {
+            const accept = window.confirm("Has fallado en conquistar la semana anterior. La disciplina requiere honestidad y constancia.\n\n¿Aceptas la derrota y te comprometes a dar lo mejor de ti en este nuevo ciclo?");
+            if (!accept) return;
+        }
+
         setInitiating(numeroSemana);
         try {
             const res = await api.post(`/api/objetivos/${id}/meses/${mesId}/semanas/${numeroSemana}`);
@@ -157,16 +177,26 @@ const ObjetivoView = () => {
         const nextNum = cuenta + 1;
 
         if (nextNum === 1 && mes.mes > 1) {
-            // Para Semana 1 de un Mes N>1: La Semana 4 del mes anterior DEBE estar completada
+            // Para Semana 1 de un Mes N>1: La Semana 4 del mes anterior DEBE estar completada (o vencida)
             const mesAnterior = allMeses.find(m => m.mes === mes.mes - 1);
             const semana4anterior = mesAnterior?.semanas?.find(s => s.numero_semana === 4);
-            if (!semana4anterior?.completada) return null; // 🔒 Mes anterior no conquistado
+            if (!semana4anterior) return null;
+            
+            const isCompleted = semana4anterior.completada;
+            const isTimeOver = new Date(semana4anterior.fecha_fin + 'T23:59:59') < new Date();
+            
+            if (!isCompleted && !isTimeOver) return null; // 🔒 Mes anterior no conquistado ni vencido
         }
 
         if (nextNum > 1) {
-            // Para Semana 2,3,4: la semana anterior en el mismo mes debe estar completada
+            // Para Semana 2,3,4: la semana anterior en el mismo mes debe estar completada (o vencida)
             const semanaPrevia = semanasActuales.find(s => s.numero_semana === nextNum - 1);
-            if (!semanaPrevia?.completada) return null;
+            if (!semanaPrevia) return null;
+            
+            const isCompleted = semanaPrevia.completada;
+            const isTimeOver = new Date(semanaPrevia.fecha_fin + 'T23:59:59') < new Date();
+
+            if (!isCompleted && !isTimeOver) return null;
         }
 
         return nextNum;

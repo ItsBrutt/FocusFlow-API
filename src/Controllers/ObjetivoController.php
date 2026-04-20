@@ -89,19 +89,24 @@ class ObjetivoController {
 
         // ÁRBOL DE HABILIDADES: Validar semana previa
         if ($numero_semana > 1) {
-            $qPrev = "SELECT completada FROM Planner_Semanal WHERE objetivo_mensual_id = ? AND numero_semana = ?";
+            $qPrev = "SELECT completada, fecha_fin FROM Planner_Semanal WHERE objetivo_mensual_id = ? AND numero_semana = ?";
             $stmtPrev = $db->prepare($qPrev);
             $stmtPrev->execute([(int)$mes_id, $numero_semana - 1]);
             $semPrev = $stmtPrev->fetch(\PDO::FETCH_ASSOC);
 
-            if (!$semPrev || !$semPrev['completada']) {
-                Response::json(403, "Debes conquistar la Semana " . ($numero_semana - 1) . " antes de continuar. El camino se recorre paso a paso. 🔒");
+            if (!$semPrev) {
+                Response::json(403, "Ruta de habilidades corrupta. No existe la semana previa.");
+            } else if (!$semPrev['completada']) {
+                if (strtotime($semPrev['fecha_fin']) >= strtotime('today')) {
+                    Response::json(403, "Debes conquistar la Semana " . ($numero_semana - 1) . " antes de continuar o esperar a que termine la semana actual. El camino se recorre paso a paso. 🔒");
+                }
+                // Si la semana terminó en el tiempo pero no fue completada, PERMITIR el avance. (Derrota aceptada).
             }
         } else {
-            // Semana 1 de un Mes N > 1: requiere que Semana 4 del Mes anterior esté completada
+            // Semana 1 de un Mes N > 1: requiere que Semana 4 del Mes anterior esté completada (o vencida)
             if ($mesDb['mes'] > 1) {
                 $qMesAnterior = "
-                    SELECT ps.completada FROM Planner_Semanal ps
+                    SELECT ps.completada, ps.fecha_fin FROM Planner_Semanal ps
                     JOIN Objetivos_Mensuales om ON ps.objetivo_mensual_id = om.id
                     WHERE om.objetivo_anual_id = ? AND om.mes = ? AND ps.numero_semana = 4
                 ";
@@ -109,8 +114,13 @@ class ObjetivoController {
                 $stmtMA->execute([(int)$objetivo_id, $mesDb['mes'] - 1]);
                 $semAnteriorMes = $stmtMA->fetch(\PDO::FETCH_ASSOC);
 
-                if (!$semAnteriorMes || !$semAnteriorMes['completada']) {
-                    Response::json(403, "Debes conquistar completamente el Mes " . ($mesDb['mes'] - 1) . " antes de iniciar este nuevo ciclo. 🔒");
+                if (!$semAnteriorMes) {
+                    Response::json(403, "Ruta de habilidades corrupta entre meses.");
+                } else if (!$semAnteriorMes['completada']) {
+                    if (strtotime($semAnteriorMes['fecha_fin']) >= strtotime('today')) {
+                        Response::json(403, "Debes conquistar completamente el Mes " . ($mesDb['mes'] - 1) . " antes de iniciar este nuevo ciclo o esperar a que termine. 🔒");
+                    }
+                    // Si terminó en tiempo pero falló, permitir avance.
                 }
             }
         }
