@@ -1,9 +1,12 @@
 import { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
+    const { theme, toggleTheme } = useContext(ThemeContext);
+
     const location = useLocation();
 
     if (!user) return null;
@@ -45,6 +48,14 @@ const Navbar = () => {
 
                     {/* User info */}
                     <div className="d-flex align-items-center gap-2 gap-md-3 ms-auto">
+                        <button 
+                            onClick={toggleTheme} 
+                            className="btn btn-sm btn-outline-light rounded-circle p-1 d-flex align-items-center justify-content-center"
+                            style={{ width: '32px', height: '32px' }}
+                            title={theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
+                        >
+                            {theme === 'light' ? '🌙' : '☀️'}
+                        </button>
                         <span className="text-white opacity-75 small d-none d-md-inline">Hola, <strong>{user.nombre}</strong></span>
                         <button onClick={logout} className="btn btn-sm btn-outline-light rounded-pill px-3">
                             Salir
@@ -53,12 +64,12 @@ const Navbar = () => {
                 </div>
 
                 {/* Bottom Nav - Mobile */}
-                <nav className="d-md-none fixed-bottom bg-white d-flex justify-content-around align-items-center pb-2 pt-2" style={{ height: '65px', boxShadow: '0 -4px 12px rgba(0,0,0,0.06)', zIndex: 1050, borderTop: '1px solid #f1f5f9' }} aria-label="Navegación móvil">
-                    <Link to="/planner" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: isActive('/planner') ? '#2563eb' : '#94a3b8' }}>
+                <nav className="d-md-none fixed-bottom bg-body border-top d-flex justify-content-around align-items-center pb-2 pt-2" style={{ height: '65px', boxShadow: '0 -4px 12px rgba(0,0,0,0.06)', zIndex: 1050 }} aria-label="Navegación móvil">
+                    <Link to="/planner" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: isActive('/planner') ? '#2563eb' : 'var(--bs-secondary-color)' }}>
                         <span style={{ fontSize: '1.25rem', marginBottom: '2px', filter: isActive('/planner') ? 'none' : 'grayscale(100%)', opacity: isActive('/planner') ? 1 : 0.6 }}>📅</span>
                         <span style={{ fontSize: '0.65rem', fontWeight: isActive('/planner') ? '700' : '500' }}>Planner</span>
                     </Link>
-                    <Link to="/planificacion" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: isActive('/planificacion') ? '#2563eb' : '#94a3b8' }}>
+                    <Link to="/planificacion" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: isActive('/planificacion') ? '#2563eb' : 'var(--bs-secondary-color)' }}>
                         <span style={{ fontSize: '1.25rem', marginBottom: '2px', filter: isActive('/planificacion') ? 'none' : 'grayscale(100%)', opacity: isActive('/planificacion') ? 1 : 0.6 }}>🗺️</span>
                         <span style={{ fontSize: '0.65rem', fontWeight: isActive('/planificacion') ? '700' : '500' }}>Planificación</span>
                     </Link>

@@ -203,7 +203,7 @@ const ObjetivoView = () => {
     };
 
     return (
-        <div style={{ background: '#f0f4f8', minHeight: '100vh' }}>
+        <div style={{ background: 'var(--bs-body-bg)', minHeight: '100vh' }}>
             <Navbar />
             <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 16px 40px' }}>
                 <div className="mb-3 mt-3">
@@ -241,9 +241,9 @@ const ObjetivoView = () => {
                 {/* Header del Objetivo */}
                 {objetivo && (
                     <div className="obj-view-header" style={{
-                        background: '#fff', borderRadius: '14px',
+                        background: 'var(--bs-card-bg)', borderRadius: '14px',
                         boxShadow: '0 1px 6px rgba(0,0,0,0.07)',
-                        border: '1px solid #f1f5f9',
+                        border: '1px solid var(--bs-border-color)',
                         borderTop: `4px solid ${objetivo.color || '#2563eb'}`,
                         padding: '20px 24px',
                         marginBottom: '20px',
@@ -318,8 +318,8 @@ const ObjetivoView = () => {
                                             <button key={mes.id} className="mes-btn" onClick={() => { setMesSeleccionado(mes); setSemanaSeleccionada(mes.semanas?.[0] || null); }}
                                                 style={{
                                                     flex: '1 1 140px', minWidth: '130px', maxWidth: '220px',
-                                                    padding: '10px 14px', border: isActive ? `2px solid ${color}` : '1px solid #e2e8f0',
-                                                    borderRadius: '10px', background: isActive ? '#fff' : '#f8fafc',
+                                                    padding: '10px 14px', border: isActive ? `2px solid ${color}` : '1px solid var(--bs-border-color)',
+                                                    borderRadius: '10px', background: isActive ? 'var(--bs-card-bg)' : 'var(--bs-secondary-bg)',
                                                     cursor: 'pointer', textAlign: 'left',
                                                     boxShadow: isActive ? `0 0 0 3px ${color}22` : 'none',
                                                     transition: 'all 0.15s'
@@ -379,8 +379,8 @@ const ObjetivoView = () => {
                                                     flex: '1 1 120px', minWidth: '110px', maxWidth: '160px',
                                                     padding: '12px 14px', borderRadius: '12px', textAlign: 'center',
                                                     cursor: isLocked ? 'not-allowed' : 'pointer',
-                                                    border: isSelected ? `2px solid ${color}` : isWin ? '2px solid #22c55e' : canUnlock ? '2px dashed #22c55e' : '1px solid #e2e8f0',
-                                                    background: isSelected ? '#fff' : isWin ? '#f0fdf4' : canUnlock ? '#f0fdf4' : isLocked ? '#f8fafc' : '#fff',
+                                                    border: isSelected ? `2px solid ${color}` : isWin ? '2px solid #22c55e' : canUnlock ? '2px dashed #22c55e' : '1px solid var(--bs-border-color)',
+                                                    background: isSelected ? 'var(--bs-card-bg)' : isWin ? 'rgba(34, 197, 94, 0.1)' : canUnlock ? 'rgba(34, 197, 94, 0.1)' : isLocked ? 'var(--bs-secondary-bg)' : 'var(--bs-card-bg)',
                                                     boxShadow: isSelected ? `0 0 0 3px ${color}22` : 'none',
                                                     opacity: isLocked ? 0.5 : 1,
                                                     transition: 'all 0.2s',
@@ -402,8 +402,8 @@ const ObjetivoView = () => {
                                     {semanaSeleccionada && (() => {
                                         const isWin = semanaSeleccionada.completada;
                                         return (
-                                            <div style={{ background: '#fff', borderRadius: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.07)', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
-                                                <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                                            <div style={{ background: 'var(--bs-card-bg)', borderRadius: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.07)', border: '1px solid var(--bs-border-color)', overflow: 'hidden' }}>
+                                                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--bs-border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                                                     <div>
                                                         <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{isWin ? '🏆 SEMANA CONQUISTADA' : '🚀 PLANNER ACTIVO'}</span>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>

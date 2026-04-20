@@ -327,9 +327,10 @@ const TareaCard = ({ tarea, diaId, executionLocked, inThePast, onComplete, onDel
         } catch { setDeleting(false); resetSwipe(); }
     };
 
-    const cardBg     = isDone ? '#f0fdf4' : missedTask ? '#fff7ed' : '#fff';
-    const cardBorder = isDone ? '#86efac' : missedTask ? '#fcd34d' : '#e2e8f0';
+    const cardBg     = isDone ? 'rgba(34, 197, 94, 0.1)' : missedTask ? 'rgba(245, 158, 11, 0.1)' : 'var(--bs-body-bg)';
+    const cardBorder = isDone ? '#86efac' : missedTask ? '#fcd34d' : 'var(--bs-border-color)';
     const accentColor = isDone ? '#22c55e' : missedTask ? '#f59e0b' : '#2563eb';
+    const textColor = isDone ? 'var(--bs-secondary-color)' : missedTask ? '#d97706' : 'var(--bs-body-color)';
 
     return (
         <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '10px' }}>
@@ -457,7 +458,7 @@ const TareaCard = ({ tarea, diaId, executionLocked, inThePast, onComplete, onDel
                         className={isDone ? 'text-decoration-line-through' : ''}
                         style={{
                             fontSize: '0.84rem',
-                            color: isDone ? '#6b7280' : missedTask ? '#92400e' : '#1e293b',
+                            color: textColor,
                             lineHeight: 1.4,
                             // Área de toque amplia
                             paddingTop: '2px', paddingBottom: '2px',
@@ -633,8 +634,8 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
                                 {/* ── Header ── */}
                                 <div style={{
                                     padding: '10px 12px',
-                                    background: inThePast ? '#94a3b8' : dayIsLocked ? '#cbd5e1' : '#fff',
-                                    borderBottom: '1px solid #f1f5f9',
+                                    background: inThePast ? 'var(--bs-secondary-bg)' : dayIsLocked ? 'var(--bs-tertiary-bg)' : 'var(--bs-body-bg)',
+                                    borderBottom: '1px solid var(--bs-border-color)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -667,7 +668,7 @@ const PlannerGrid = ({ dias: initialDias, onTaskUpdated }) => {
                                 </div>
 
                                 {/* ── Cuerpo ── */}
-                                <div className="card-body p-2 d-flex flex-column gap-2" style={{ backgroundColor: '#fdfdfd' }}>
+                                <div className="card-body p-2 d-flex flex-column gap-2" style={{ backgroundColor: 'var(--bs-card-bg)' }}>
                                     {/* Aviso de bloqueo (solo ejecución) */}
                                     {dayIsLocked && (
                                         <div style={{

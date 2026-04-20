@@ -9,7 +9,7 @@ import ObjetivoView from './pages/ObjetivoView';
 function App() {
   return (
     <Router>
-      <div className="bg-light min-vh-100">
+      <div className="bg-body-tertiary min-vh-100">
         <Routes>
           {/* Rutas Públicas */}
           <Route path="/login"    element={<Login />} />
