@@ -60,4 +60,12 @@ class Database {
     public function getConnection(): PDO {
         return $this->conn;
     }
+
+    /**
+     * Inyecta el ID del usuario en la conexión de Base de Datos para RLS.
+     */
+    public function setDbUser($userId): void {
+        $stmt = $this->conn->prepare("SET app.current_user_id = :user_id");
+        $stmt->execute(['user_id' => $userId]);
+    }
 }

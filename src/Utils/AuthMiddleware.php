@@ -4,6 +4,7 @@ namespace App\Utils;
 
 use App\Utils\JwtHandler;
 use App\Utils\Response;
+use App\Config\Database;
 
 class AuthMiddleware {
     
@@ -40,6 +41,9 @@ class AuthMiddleware {
 
         // Si pasó todas las pruebas, registrar esta sesión en memoria volátil de PHP
         self::$currentPayload = (array) $payload;
+
+        // Inyectar el ID del usuario en la conexión de Base de Datos para RLS
+        Database::getInstance()->setDbUser(self::$currentPayload['id']);
     }
 
     /**
