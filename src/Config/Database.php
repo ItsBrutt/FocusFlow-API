@@ -65,7 +65,8 @@ class Database {
      * Inyecta el ID del usuario en la conexión de Base de Datos para RLS.
      */
     public function setDbUser($userId): void {
-        $stmt = $this->conn->prepare("SET app.current_user_id = :user_id");
-        $stmt->execute(['user_id' => $userId]);
+        // Usamos set_config porque SET no siempre admite placeholders en prepared statements
+        $stmt = $this->conn->prepare("SELECT set_config('app.current_user_id', :user_id, false)");
+        $stmt->execute(['user_id' => (string)$userId]);
     }
 }
