@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import PlannerMaestro from './pages/PlannerMaestro';
 import Planificacion from './pages/Planificacion';
 import ObjetivoView from './pages/ObjetivoView';
+import Home from './pages/Home';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <div className="bg-body-tertiary min-vh-100">
         <Routes>
           {/* Rutas Públicas */}
+          <Route path="/"         element={<Home />} />
           <Route path="/login"    element={<Login />} />
           <Route path="/register" element={<Register />} />
 
@@ -32,8 +34,8 @@ function App() {
           <Route path="/dashboard" element={<Navigate to="/planificacion" replace />} />
           <Route path="/dashboard/objetivo/:id" element={<Navigate to="/planificacion/objetivo/:id" replace />} />
 
-          {/* Fallback → Planner es la home */}
-          <Route path="*" element={<Navigate to="/planner" replace />} />
+          {/* Fallback → Home es la raíz */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </Router>
