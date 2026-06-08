@@ -33,6 +33,11 @@ const Login = () => {
     return (
         <div className="container d-flex justify-content-center align-items-center vh-100">
             <div className="card shadow-sm p-4" style={{ width: '100%', maxWidth: '400px' }}>
+                <div className="mb-3">
+                    <Link to="/" className="text-decoration-none text-secondary small d-flex align-items-center gap-1" style={{ fontSize: '0.85rem' }}>
+                        ← Volver al inicio
+                    </Link>
+                </div>
                 <h2 className="text-center mb-4 text-primary fw-bold">FocusFlow</h2>
                 
                 {error && <div className="alert alert-danger">{error}</div>}
