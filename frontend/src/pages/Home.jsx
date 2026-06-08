@@ -274,7 +274,7 @@ const Home = () => {
                 <div className="container">
                     <div className="cta-banner p-5 text-center shadow-lg position-relative overflow-hidden">
                         <div className="position-relative z-3">
-                            <h2 className="display-5 fw-bold mb-3 text-white">Diseña una semana de la que te sientas orgulloso</h2>
+                            <h2 className="display-5 fw-bold mb-3 text-white">Diseña una semana del que te sientas orgulloso</h2>
                             <p className="lead mb-4 mx-auto" style={{ maxWidth: '700px', opacity: 0.9, fontSize: '1.15rem', lineHeight: '1.7' }}>
                                 La organización semanal no es una camisa de fuerza; es el mapa que te da la libertad de crear, crecer y respirar con tranquilidad. Deja atrás el estrés del caos diario. Planifica hoy y empieza a fluir en tus metas.
                             </p>
